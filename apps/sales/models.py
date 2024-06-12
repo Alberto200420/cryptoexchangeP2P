@@ -35,7 +35,7 @@ class Sale(models.Model):
   reference =     models.CharField(max_length=100, blank=True, null=True)
   address =       models.CharField(max_length=100, unique=True)
   buyed_at =      models.DateTimeField(blank=True, null=True)
-  bitcoin_value = models.IntegerField(blank=True, null=True)
+  bitcoin_value = models.FloatField(blank=True, null=True)
   voucher =       models.ImageField(upload_to=public_thumbnail_directory, blank=True, null=True)
 
   class Meta:

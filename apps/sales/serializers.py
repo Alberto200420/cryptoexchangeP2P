@@ -11,7 +11,7 @@ class SaleListPurchaedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sale
-        fields = ['accountNumber', 'reference', 'bankEntity', 'address', 'buyed_at', 'bitcoin_value', 'has_comment']
+        fields = ['accountNumber', 'reference', 'bankEntity', 'address', 'buyed_at', 'bitcoin_value', 'has_comment', 'status']
 
     def get_has_comment(self, obj):
         return Comments.objects.filter(sale_post=obj).exists()
@@ -33,7 +33,7 @@ class SaleCreateSerializer(serializers.ModelSerializer):
 class DashboardPostListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sale
-        fields = ('accountNumber', 'reference', 'bankEntity', 'address', 'created_at')
+        fields = ('accountNumber', 'reference', 'bankEntity', 'address', 'created_at', 'status', 'slug', 'voucher')
         
 class EditeSaleSerializer(serializers.ModelSerializer):
     class Meta:
