@@ -6,6 +6,10 @@ from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from django.utils import timezone
+<<<<<<< HEAD
+=======
+from django.db import transaction
+>>>>>>> changes
 from hdwallet import BIP141HDWallet
 from hdwallet.symbols import BTCTEST as SYMBOL #  BTC as SYMBOL
 from .models import Sale
@@ -335,7 +339,11 @@ class ActiveSaleLoop(APIView):
     failedAttempts = 0
     while failedAttempts < 3:
       try:
+<<<<<<< HEAD
         getUTXO = requests.get(url=f'https://mempool.space/testnet4/api/address/{address}/utxo')
+=======
+        getUTXO = requests.get(url=f'https://mempool.space/testnet/api/address/{address}/utxo')
+>>>>>>> changes
         dataInfo = getUTXO.json()
         if dataInfo and dataInfo[0]["status"]["confirmed"]:
           return str(dataInfo[0]["txid"]), int(dataInfo[0]["vout"]), int(dataInfo[0]["value"])
@@ -450,12 +458,21 @@ class ConfirmBuy(APIView):
     - UTXO value in satoshis if the transaction is confirmed.
     """
     try:
+<<<<<<< HEAD
       getUTXO = requests.get(url=f'https://mempool.space/testnet4/api/address/{address}/utxo')
       dataInfo = getUTXO.json()
       if dataInfo[0]["status"]["confirmed"] == True:
         return int(dataInfo[0]["value"])
       else:
         Response({'error': 'Transaction not recibed'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+=======
+      getUTXO = requests.get(url=f'https://mempool.space/testnet/api/address/{address}/utxo')
+      dataInfo = getUTXO.json()
+      if dataInfo and dataInfo[0]["status"]["confirmed"]:
+        return int(dataInfo[0]["value"])
+      else:
+        Response({'error': 'Transaction not received'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+>>>>>>> changes
     except Exception as e:
       return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -470,6 +487,7 @@ class ConfirmBuy(APIView):
     seller_profile = get_object_or_404(Profile, user=request.user)
     buyer_profile = get_object_or_404(Profile, user=sale.buyer)
     buyer_wallet = get_object_or_404(Wallet, user=sale.buyer)
+<<<<<<< HEAD
     try:
       ammountSATOSHIS = self.getUTXO_value(address=sale.address)
       UTXO.objects.create(user=sale.buyer ,slug=sale, address=sale.address, wallet=buyer_wallet)
@@ -490,6 +508,38 @@ class ConfirmBuy(APIView):
       self.send_email(sale.buyer.email)
       return Response({"Confirmed exchange"}, status=status.HTTP_200_OK)
     except Exception as e:
+=======
+
+    try:
+      ammountSATOSHIS = self.getUTXO_value(address=sale.address)
+      if isinstance(ammountSATOSHIS, Response):
+        return ammountSATOSHIS  # Return error response if UTXO retrieval failed
+      
+      # Utilizamos transaction.atomic() para asegurarnos de que todas las operaciones de base de datos 
+      # dentro del bloque se realicen de manera atómica. Si alguna falla, ninguna de las operaciones se 
+      # guardará en la base de datos.
+      with transaction.atomic():
+        UTXO.objects.create(user=sale.buyer, slug=sale, address=sale.address, wallet=buyer_wallet)
+        sale.status = 'bought'
+        sale.save()
+
+        seller_profile.successful_exchanges += 1
+        buyer_profile.successful_exchanges += 1
+        seller_profile.number_of_sales += 1
+        buyer_profile.number_of_purchase += 1
+        inBTC = 0.00000001 * ammountSATOSHIS
+        buyer_wallet.amountInCrypto += inBTC
+
+        seller_profile.save()
+        buyer_profile.save()
+        buyer_wallet.save()
+        self.send_email(sale.buyer.email)
+
+      return Response({"Confirmed exchange"}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+      logger.error(f"Error during sale confirmation: {e}")
+>>>>>>> changes
       return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ReportPost(APIView):
@@ -671,7 +721,11 @@ class EditSalePost(APIView):
     if sale.user == request.user:
       if serializer.is_valid() and sale.status == 'paused':
         try:
+<<<<<<< HEAD
           getUTXO = requests.get(url=f'https://mempool.space/testnet4/api/address/{sale.address}/utxo')
+=======
+          getUTXO = requests.get(url=f'https://mempool.space/testnet/api/address/{sale.address}/utxo')
+>>>>>>> changes
           dataInfo = getUTXO.json()
           if dataInfo:
             if dataInfo[0]["status"]["confirmed"] == True:
@@ -693,7 +747,12 @@ class EditSalePost(APIView):
 class GetSaleList(APIView):
   permission_classes = [permissions.IsAuthenticated]
   def get(self, request, format=None):
+<<<<<<< HEAD
     sales = Sale.objects.all().values('address', 'bankEntity', 'created_at', 'slug')
+=======
+    # Filtra las ventas por estado 'active'
+    sales = Sale.objects.filter(status='active').values('address', 'bankEntity', 'created_at', 'slug')
+>>>>>>> changes
     sales_list = list(sales)
     return Response(sales_list, status=status.HTTP_200_OK)
 
@@ -704,7 +763,11 @@ class GetDashboardOwnertList(APIView):
     sales = Sale.objects.filter(user=user)
     if not sales:
       return Response(status=status.HTTP_204_NO_CONTENT)
+<<<<<<< HEAD
     serialized_data = DashboardPostListSerializer(sales, many=True, fields=('accountNumber', 'reference', 'bankEntity', 'address', 'created_at'))
+=======
+    serialized_data = DashboardPostListSerializer(sales, many=True)
+>>>>>>> changes
     return Response(serialized_data.data, status=status.HTTP_200_OK)
 
 class GetSale(APIView):

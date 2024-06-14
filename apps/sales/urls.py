@@ -14,7 +14,11 @@ urlpatterns = [
   path('comment/', MakeComment.as_view()),                           # HACE COMMENTARIOS
   path('get-sale-list', GetSaleList.as_view()),                      # OBTENER TODOS LOS POST CON DATOS ESPECIFICOS Y RETORNARLOS
   path('get-dashboard-owned-list', GetDashboardOwnertList.as_view()),# OBTENER TODOS LOS POST CREADOS CON DATOS ESPECIFICOS Y RETORNARLOS
+<<<<<<< HEAD
   path('get-purchases-list', GetSaleOwnerPost.as_view()),            # OBTENER LAS COMPRAS DEL USUARIO Y RETORNA SI ESTA COMENTADO O NO
+=======
+  path('get-purchases-list', GetPurchasedSalesList.as_view()),       # OBTENER LAS COMPRAS DEL USUARIO Y RETORNA SI ESTA COMENTADO O NO
+>>>>>>> changes
   path('get', GetSale.as_view()),                                    # OBTENER TODOS LOS DATOS DE UN MODELO CON UN SLUG COMO PARAMETRO
   #     /get?slug=your-slug-value
   path('get-confirm', GetSaleOwnerPost.as_view()),                   # OBTENER TODOS LOS DATOS DEL MODELO CON UN SLUG COMO PARAMETRO
