@@ -704,7 +704,8 @@ class EditSalePost(APIView):
 class GetSaleList(APIView):
   permission_classes = [permissions.IsAuthenticated]
   def get(self, request, format=None):
-    sales = Sale.objects.all().values('address', 'bankEntity', 'created_at', 'slug')
+    # Filtra las ventas por estado 'active'
+    sales = Sale.objects.filter(status='active').values('address', 'bankEntity', 'created_at', 'slug')
     sales_list = list(sales)
     return Response(sales_list, status=status.HTTP_200_OK)
 

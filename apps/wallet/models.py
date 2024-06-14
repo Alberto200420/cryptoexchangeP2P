@@ -14,7 +14,7 @@ class UTXO(models.Model):
   user =    models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_utxo')
   slug =    models.OneToOneField(Sale, on_delete=models.DO_NOTHING, related_name='sale_slug', unique=True)
   status =  models.CharField(max_length=6, choices=STATUS, default='active')
-  address = models.CharField(max_length=40, unique=True)
+  address = models.CharField(max_length=100, unique=True)
   wallet =  models.ForeignKey('Wallet', on_delete=models.CASCADE, related_name='utxos')  # Relación inversa
 
 class Wallet(models.Model):
