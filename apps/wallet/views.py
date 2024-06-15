@@ -33,7 +33,7 @@ class Withdraw(APIView):
     Retorna si la tx recibida fue con segwit
     """
     try:
-      txData = requests.get(url=f'https://mempool.space/testnet/api/tx/{tx}')
+      txData = requests.get(url=f'https://mempool.space/api/tx/{tx}')
       dato = txData.json()
       # Recorremos la lista de salidas para encontrar la dirección especificada
       for output in dato['vout']:
@@ -69,7 +69,7 @@ class Withdraw(APIView):
     ```
     """
     try:
-      response = requests.get(url=f'https://mempool.space/testnet/api/address/{address}/utxo')
+      response = requests.get(url=f'https://mempool.space/api/address/{address}/utxo')
       data = response.json()
       utxos = []
       for utxo in data:
@@ -104,11 +104,11 @@ class Withdraw(APIView):
     >>> (1 INPUT = 68) + (2 OUTPUS = 62) + 10 = 140
     """
     try:
-      recommended_fees = requests.get(url="https://mempool.space/testnet/api/v1/fees/recommended")
+      recommended_fees = requests.get(url="https://mempool.space/api/v1/fees/recommended")
       fee_data = recommended_fees.json()
       # Calculamos el tamaño de la transacción según el número de inputs y outputs
       transaction_size = (num_inputs * 68) + (2 * 31) + 10
-      les_fee_sat = transaction_size * fee_data["economyFee"]
+      les_fee_sat = transaction_size * fee_data["fastestFee"]
       amount_less_fee = amount_sat - les_fee_sat
       return amount_less_fee
     except Exception as e:
@@ -150,7 +150,7 @@ class Withdraw(APIView):
         sig = priv.sign_segwit_input(tx, i, script_code, value)
         tx.witnesses.append(TxWitnessInput([sig, pub_to_hex]))
 
-      envio = requests.post(url='https://mempool.space/testnet/api/tx', data=tx.serialize())
+      envio = requests.post(url='https://mempool.space/api/tx', data=tx.serialize())
       txid = envio.text
       return True, txid
     except Exception as e:
@@ -174,7 +174,7 @@ class Withdraw(APIView):
       for i, (tx_id, vout, value) in enumerate(utxos):
         sig = priv.sign_segwit_input(tx, i, script_code, value)
         tx.witnesses.append(TxWitnessInput([sig, pub_to_hex]))
-      envio = requests.post(url='https://mempool.space/testnet/api/tx', data=tx.serialize())
+      envio = requests.post(url='https://mempool.space/api/tx', data=tx.serialize())
       txid = envio.text
       return True, txid
     except Exception as e:
@@ -183,7 +183,7 @@ class Withdraw(APIView):
 
   def verify_address(self, address_to):
     try:
-      validation = requests.get(url=f"https://mempool.space/testnet/api/v1/validate-address/{address_to}")
+      validation = requests.get(url=f"https://mempool.space/api/v1/validate-address/{address_to}")
       data_info = validation.json()
       if data_info["isvalid"]:
         if data_info['isscript'] == False and data_info['iswitness'] == False:

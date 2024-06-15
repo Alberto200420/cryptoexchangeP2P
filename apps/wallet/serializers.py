@@ -5,8 +5,3 @@ class GetWalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
         fields = '__all__'
-
-class GetUTXOtSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UTXO
-        fields = '__all__'

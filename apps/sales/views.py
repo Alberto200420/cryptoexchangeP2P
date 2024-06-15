@@ -334,7 +334,7 @@ class ActiveSaleLoop(APIView):
     failedAttempts = 0
     while failedAttempts < 3:
       try:
-        getUTXO = requests.get(url=f'https://mempool.space/testnet/api/address/{address}/utxo')
+        getUTXO = requests.get(url=f'https://mempool.space/api/address/{address}/utxo')
         dataInfo = getUTXO.json()
         if dataInfo and dataInfo[0]["status"]["confirmed"]:
           return str(dataInfo[0]["txid"]), int(dataInfo[0]["vout"]), int(dataInfo[0]["value"])
@@ -448,7 +448,7 @@ class ConfirmBuy(APIView):
     - UTXO value in satoshis if the transaction is confirmed.
     """
     try:
-      getUTXO = requests.get(url=f'https://mempool.space/testnet/api/address/{address}/utxo')
+      getUTXO = requests.get(url=f'https://mempool.space/api/address/{address}/utxo')
       dataInfo = getUTXO.json()
       if dataInfo and dataInfo[0]["status"]["confirmed"]:
         return int(dataInfo[0]["value"])
@@ -679,7 +679,7 @@ class EditSalePost(APIView):
     if sale.user == request.user:
       if serializer.is_valid() and sale.status == 'paused':
         try:
-          getUTXO = requests.get(url=f'https://mempool.space/testnet/api/address/{sale.address}/utxo')
+          getUTXO = requests.get(url=f'https://mempool.space/api/address/{sale.address}/utxo')
           dataInfo = getUTXO.json()
           if dataInfo:
             if dataInfo[0]["status"]["confirmed"] == True:
