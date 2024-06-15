@@ -49,8 +49,6 @@ class Withdraw(APIView):
           typeOf = output['scriptpubkey_type']
           if typeOf == 'v0_p2wpkh':
             return True
-          else:
-            return False
       # Si no se encuentra la dirección en las salidas, retornamos False
       return False
     except Exception as e:
@@ -81,8 +79,12 @@ class Withdraw(APIView):
     try:
       response = requests.get(url=f'https://mempool.space/testnet/api/address/{address}/utxo')
       data = response.json()
-      if data and data[0]["status"]["confirmed"]:
-        return str(data[0]["txid"]), int(data[0]["vout"]), int(data[0]["value"])
+      utxos = []
+      for utxo in data:
+        if utxo["status"]["confirmed"]:
+          utxos.append((str(utxo["txid"]), int(utxo["vout"]), int(utxo["value"])))
+      print(f'get_utxo_data() utxos: {utxos}')
+      return utxos
     except Exception as e:
       logger.error(f"Error occurred get_utxo_data(): {e}")
       return None
@@ -97,7 +99,7 @@ class Withdraw(APIView):
     hdwallet.from_mnemonic(mnemonic=MNEMONIC, language='english', passphrase=PASSPHRASE)
     return hdwallet.hash(), hdwallet.compressed(), hdwallet.wif()
 
-  def get_less_fees(self, amount_sat: int) -> int:
+  def get_less_fees(self, amount_sat: int, num_inputs: int) -> int:
     """
     TAMAÑO DE TRANSACCION
     ----------------------------
@@ -113,10 +115,9 @@ class Withdraw(APIView):
     try:
       recommended_fees = requests.get(url="https://mempool.space/testnet/api/v1/fees/recommended")
       fee_data = recommended_fees.json()
-      # les_fee_sat = 140 * fee_data["minimumFee"]
-      les_fee_sat = 140 * 35
-      print(f'Fee SAT: {les_fee_sat}')
-      print(f'Ammount SAT: {amount_sat}')
+      # Calculamos el tamaño de la transacción según el número de inputs y outputs
+      transaction_size = (num_inputs * 68) + (2 * 31) + 10
+      les_fee_sat = transaction_size * fee_data["economyFee"]
       amount_less_fee = amount_sat - les_fee_sat
       return amount_less_fee
     except Exception as e:
@@ -130,78 +131,74 @@ class Withdraw(APIView):
       price_per_btc_usd = data["USD"]     # Obtener el precio de 1 Bitcoin en USD
       btc_per_usd = 1 / price_per_btc_usd # Calcular cuánto Bitcoin se obtiene por 1 dólar
       commissionSatoshis = to_satoshis(btc_per_usd)
-      print(f'Precio por 1 Bitcoin en USD: ${price_per_btc_usd}')
-      print(f'Cantidad de Satoshis por 1 USD fromateado: {to_satoshis(btc_per_usd)} SAT')
       envVar = os.getenv('ADDRESS_COMMISSION')
       if envVar is None:
         logger.error(f"Error occurred commission(): {e}")
         raise ValueError("Environment variable 'ADDRESS_COMMISSION' is not set")
       commission_addr = P2wpkhAddress(envVar)
-      print(f'commissionSatoshis: {commissionSatoshis}')
       return commissionSatoshis, commission_addr
     except Exception as e:
       logger.error(f"Error occurred commission(): {e}")
       return None
 
-  def input_p2wpkh_to_p2pkh(self, pub_to_hash160: str, pub_to_hex: str, tx_id: str, vout: int, amount: int, address_to: str, wif: str):
-    try:        
-      txin = TxInput(tx_id, vout)
+  def input_p2wpkh_to_p2pkh(self, pub_to_hash160: str, pub_to_hex: str, utxos: list, address_to: str, wif: str):
+    try:
+      txins = [TxInput(tx_id, vout) for tx_id, vout, _ in utxos]
+      num_inputs = len(txins)
       to_addr = P2pkhAddress(address_to)
-      amount_les_fees = self.get_less_fees(amount)
+      total_amount = sum(value for _, _, value in utxos)
+      amount_les_fees = self.get_less_fees(total_amount, num_inputs)
       commissionSatoshis, commission_addr = self.commission()
       amount_to_send = amount_les_fees - commissionSatoshis
       tx_out = TxOutput(amount_to_send, to_addr.to_script_pub_key())
       commission_out = TxOutput(commissionSatoshis, commission_addr.to_script_pub_key())
-      tx = Transaction(inputs=[txin], outputs=[tx_out, commission_out], has_segwit=True)
+      tx = Transaction(txins, [tx_out, commission_out], has_segwit=True)
+
       print("\nRaw transaction:\n" + tx.serialize())
-      print("\ntxin:\n", txin)
-      print("\ntoAddr:\n", to_addr.to_string())
-      print("\ntxOut:\n", tx_out)
-      print("\ncommission_out:\n", commission_out)
-      print("\ntx:\n", tx)
+
       script_code = Script(['OP_DUP', 'OP_HASH160', pub_to_hash160, 'OP_EQUALVERIFY', 'OP_CHECKSIG'])
       priv = PrivateKey(wif)
-      sig = priv.sign_segwit_input(tx, 0, script_code, amount)
-      tx.witnesses.append(TxWitnessInput([sig, pub_to_hex]))
-      print("\nRaw signed transaction:\n" + tx.serialize())
-      print("\nTxId:", tx.get_txid())
+      for i, (tx_id, vout, value) in enumerate(utxos):
+        sig = priv.sign_segwit_input(tx, i, script_code, value)
+        tx.witnesses.append(TxWitnessInput([sig, pub_to_hex]))
+
       envio = requests.post(url='https://mempool.space/testnet/api/tx', data=tx.serialize())
-      print(envio.status_code)
-      print(envio.text)
-      return True
+      txid = envio.text
+      return True, txid
     except Exception as e:
       logger.error(f"Error occurred input_p2wpkh_to_p2pkh(): {e}")
-      return False
+      return False, None
 
-  def input_p2wpkh_to_p2wpkh(self, pub_to_hash160: str, pub_to_hex: str, tx_id: str, vout: int, amount: int, address_to: str, wif: str):
+  def input_p2wpkh_to_p2wpkh(self, pub_to_hash160: str, pub_to_hex: str, utxos: list, address_to: str, wif: str):
     try:
-      txin = TxInput(tx_id, vout)
+      txins = [TxInput(tx_id, vout) for tx_id, vout, _ in utxos]
+      num_inputs = len(txins)
       to_addr = P2wpkhAddress(address_to)
-      amount_les_fees = self.get_less_fees(amount)
+      total_amount = sum(value for _, _, value in utxos)
+      amount_les_fees = self.get_less_fees(total_amount, num_inputs)
       commissionSatoshis, commission_addr = self.commission()
       amount_to_send = amount_les_fees - commissionSatoshis
       tx_out = TxOutput(amount_to_send, to_addr.to_script_pub_key())
       commission_out = TxOutput(commissionSatoshis, commission_addr.to_script_pub_key())
-      tx = Transaction(inputs=[txin], outputs=[tx_out, commission_out], has_segwit=True)
+      tx = Transaction(txins, [tx_out, commission_out], has_segwit=True)
+
       print("\nRaw transaction:\n" + tx.serialize())
-      print("\ntxin:\n", txin)
-      print("\ntoAddr:\n", to_addr.to_string())
-      print("\ntxOut:\n", tx_out)
-      print("\ncommission_out:\n", commission_out)
-      print("\ntx:\n", tx)
+
       script_code = Script(['OP_DUP', 'OP_HASH160', pub_to_hash160, 'OP_EQUALVERIFY', 'OP_CHECKSIG'])
       priv = PrivateKey(wif)
-      sig = priv.sign_segwit_input(tx, 0, script_code, amount)
-      tx.witnesses.append(TxWitnessInput([sig, pub_to_hex]))
+      for i, (tx_id, vout, value) in enumerate(utxos):
+        sig = priv.sign_segwit_input(tx, i, script_code, value)
+        tx.witnesses.append(TxWitnessInput([sig, pub_to_hex]))
+
       print("\nRaw signed transaction:\n" + tx.serialize())
       print("\nTxId:", tx.get_txid())
+          
       envio = requests.post(url='https://mempool.space/testnet/api/tx', data=tx.serialize())
-      print(envio.status_code)
-      print(envio.text)
-      return True
+      txid = envio.text
+      return True, txid
     except Exception as e:
       logger.error(f"Error occurred input_p2wpkh_to_p2wpkh(): {e}")
-      return False
+      return False, None
 
   def verify_address(self, address_to):
     try:
@@ -235,26 +232,28 @@ class Withdraw(APIView):
         for address in addresses:
           utxo = get_object_or_404(UTXO, address=address)
           pub_to_hash160, pub_to_hex, wif = self.generate_btc_address(path=utxo.slug)
-          txid, vout, amount_in_sat = self.get_utxo_data(address)
-          isP2wpkh = self.checkTxPrevInputType(tx=txid, address=address)
+          utxos = self.get_utxo_data(address)
+          if not utxos:
+            return Response({'no utxo found'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+          isP2wpkh = False
+          for txid, _, _ in utxos:
+            if self.checkTxPrevInputType(tx=txid, address=address):
+              isP2wpkh = True
+              break
           if address_type == 'legacy' and isP2wpkh:
-            send = self.input_p2wpkh_to_p2pkh(pub_to_hash160=pub_to_hash160,
-                                      pub_to_hex=pub_to_hex, 
-                                      tx_id=txid, 
-                                      vout=vout, 
-                                      amount=amount_in_sat, 
-                                      address_to=address_to,
-                                      wif=wif
-                                      )
+            send, txid = self.input_p2wpkh_to_p2pkh(pub_to_hash160=pub_to_hash160,
+                                                    pub_to_hex=pub_to_hex,
+                                                    utxos=utxos,
+                                                    address_to=address_to,
+                                                    wif=wif
+                                                    )
           if address_type == 'witness' and isP2wpkh:
-            send = self.input_p2wpkh_to_p2wpkh(pub_to_hash160=pub_to_hash160,
-                                      pub_to_hex=pub_to_hex, 
-                                      tx_id=txid, 
-                                      vout=vout, 
-                                      amount=amount_in_sat, 
-                                      address_to=address_to,
-                                      wif=wif
-                                      )
+            send, txid = self.input_p2wpkh_to_p2wpkh(pub_to_hash160=pub_to_hash160,
+                                                     pub_to_hex=pub_to_hex,
+                                                     utxos=utxos,
+                                                     address_to=address_to,
+                                                     wif=wif
+                                                     )
           if send:
             utxo.status = 'used'
             utxo.save()
@@ -262,7 +261,7 @@ class Withdraw(APIView):
         if send:
           wallet.amountInCrypto = 0.0
           wallet.save()
-          return Response({'Success': "sended"}, status=status.HTTP_200_OK)
+          return Response({'txid': txid}, status=status.HTTP_200_OK)
         else:
           return Response({'error': 'No UTXO was sent successfully'}, status=status.HTTP_400_BAD_REQUEST)
       else:

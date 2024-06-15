@@ -177,12 +177,11 @@ class Buy(APIView):
     """
     html_content = render_to_string('sale_notify.html', {
       'username': recipient_email,
-      'slug': slug,
-      'DOMAIN': f'{DOMAIN}',
+      'DOMAIN': F"{DOMAIN}/trade/{slug}/confirm",
     })
     send_mail(
       subject='SOMEONE HAS ACCEPTED YOUR OFFER',
-      message=f'Hi {recipient_email}, !CONGRATULATIONS!, someone has accepted your sale, visit this url {DOMAIN} to communicate with the user and close the sale.',
+      message=f'Hi {recipient_email}, !CONGRATULATIONS!, someone has accepted your sale, visit this url {DOMAIN}/trade/{slug}/confirm to communicate with the user and close the sale.',
       from_email=FROM_EMAIL,
       recipient_list=[recipient_email],
       html_message=html_content
@@ -349,16 +348,16 @@ class ActiveSaleLoop(APIView):
       time.sleep(600)  # 600 segundos = 10 minutos
     return None
 
-  def send_transaction_received_email(self, recipient_email, address):
+  def send_transaction_received_email(self, recipient_email, address, slug):
     html_content = render_to_string('active_loop.html', {
       'username': recipient_email,
       'address': address,
-      'shareLink': F'{DOMAIN}',
-      'viewLink': F'{DOMAIN}'
+      'shareLink': F"{DOMAIN}/trade/{slug}/buy",
+      'viewLink': F"{DOMAIN}/dashboard/posts"
     })
     send_mail(
       subject='TRANSACTION RECEIVED',
-      message=f'Hi {recipient_email}, this message is only to notify you that your transaction to the address {address} was received successfully. Share your post with this link {F"{DOMAIN}"} or view your post at this link {F"{DOMAIN}"}.',
+      message=f'Hi {recipient_email}, this message is only to notify you that your transaction to the address {address} was received successfully. Share your post with this link {DOMAIN}/trade/{slug}/buy" or view your post at this link {DOMAIN}/dashboard/posts".',
       from_email=FROM_EMAIL,
       recipient_list=[recipient_email],
       html_message=html_content
@@ -374,7 +373,7 @@ class ActiveSaleLoop(APIView):
         if utxo_info:
           txid, vout, value = utxo_info
           print(txid, vout, value)
-          self.send_transaction_received_email(request.user.email, address)
+          self.send_transaction_received_email(request.user.email, address, sale.slug)
           sale.status = 'active'
           sale.save()
           return Response({'status': sale.status}, status=status.HTTP_200_OK)
