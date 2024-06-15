@@ -24,14 +24,6 @@ class GetWallet(APIView):
     sales = get_object_or_404(Wallet , user=user)
     serializer = GetWalletSerializer(sales)
     return Response(serializer.data, status=status.HTTP_200_OK)
-
-# class GetUTXO(APIView):
-#   permission_classes = (permissions.IsAuthenticated, )
-#   def get(self, request, format=None):
-#     user = request.user
-#     sales = get_object_or_404(UTXO , user=user)
-#     serializer = GetUTXOtSerializer(sales)
-#     return Response(serializer.data, status=status.HTTP_200_OK)
 # ----------------------------------------- POST ------------------------------------------------
 class Withdraw(APIView):
   permission_classes = (permissions.IsAuthenticated, )
@@ -83,7 +75,6 @@ class Withdraw(APIView):
       for utxo in data:
         if utxo["status"]["confirmed"]:
           utxos.append((str(utxo["txid"]), int(utxo["vout"]), int(utxo["value"])))
-      print(f'get_utxo_data() utxos: {utxos}')
       return utxos
     except Exception as e:
       logger.error(f"Error occurred get_utxo_data(): {e}")
@@ -153,9 +144,6 @@ class Withdraw(APIView):
       tx_out = TxOutput(amount_to_send, to_addr.to_script_pub_key())
       commission_out = TxOutput(commissionSatoshis, commission_addr.to_script_pub_key())
       tx = Transaction(txins, [tx_out, commission_out], has_segwit=True)
-
-      print("\nRaw transaction:\n" + tx.serialize())
-
       script_code = Script(['OP_DUP', 'OP_HASH160', pub_to_hash160, 'OP_EQUALVERIFY', 'OP_CHECKSIG'])
       priv = PrivateKey(wif)
       for i, (tx_id, vout, value) in enumerate(utxos):
@@ -181,18 +169,11 @@ class Withdraw(APIView):
       tx_out = TxOutput(amount_to_send, to_addr.to_script_pub_key())
       commission_out = TxOutput(commissionSatoshis, commission_addr.to_script_pub_key())
       tx = Transaction(txins, [tx_out, commission_out], has_segwit=True)
-
-      print("\nRaw transaction:\n" + tx.serialize())
-
       script_code = Script(['OP_DUP', 'OP_HASH160', pub_to_hash160, 'OP_EQUALVERIFY', 'OP_CHECKSIG'])
       priv = PrivateKey(wif)
       for i, (tx_id, vout, value) in enumerate(utxos):
         sig = priv.sign_segwit_input(tx, i, script_code, value)
         tx.witnesses.append(TxWitnessInput([sig, pub_to_hex]))
-
-      print("\nRaw signed transaction:\n" + tx.serialize())
-      print("\nTxId:", tx.get_txid())
-          
       envio = requests.post(url='https://mempool.space/testnet/api/tx', data=tx.serialize())
       txid = envio.text
       return True, txid

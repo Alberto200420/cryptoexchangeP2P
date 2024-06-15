@@ -280,7 +280,6 @@ class ChangeToAtiveLoop(APIView):
     if sale.status == 'looking' and sale.user != request.user:
       attempts = 0
       while attempts < 3:
-        print(f'INTENTTO {attempts}')
         sale.refresh_from_db()
         if sale.status in ['taked_offer', 'bought']:
           return Response({'status trade': sale.status}, status=status.HTTP_200_OK)
@@ -372,7 +371,6 @@ class ActiveSaleLoop(APIView):
         utxo_info = self.getUTXOinfo(address)
         if utxo_info:
           txid, vout, value = utxo_info
-          print(txid, vout, value)
           self.send_transaction_received_email(request.user.email, address, sale.slug)
           sale.status = 'active'
           sale.save()
@@ -685,12 +683,9 @@ class EditSalePost(APIView):
           dataInfo = getUTXO.json()
           if dataInfo:
             if dataInfo[0]["status"]["confirmed"] == True:
-              print("Address have ammount")
-              print(str(dataInfo[0]["txid"]), int(dataInfo[0]["vout"]), int(dataInfo[0]["value"]))
               sale.status = 'active'
               sale.save()
           else:
-            print("There is not transaction")
             sale.status = 'pending'
             sale.save()
         except Exception as e:
@@ -746,40 +741,3 @@ class GetPurchasedSalesList(APIView):
       return Response({"detail": "No purchased sales found."}, status=status.HTTP_204_NO_CONTENT)
     serialized_data = SaleListPurchaedSerializer(purchases, many=True)
     return Response(serialized_data.data, status=status.HTTP_200_OK)
-
-# 32983c62-6273-462b-9ee4-310d1a10fe6a
-# m/32/98/36'/262'/734'/62/94
-# tb1qty2w4ktv2jshjv4r8erddqgw3flkt7qzt4rqwp
-# {
-#     "cryptocurrency": "Bitcoin",
-#     "symbol": "BTCTEST",
-#     "network": "testnet",
-#     "strength": 256,
-#     "entropy": "066b83177a1c08ea73553cc929593651b7be88fb2538d11d997fdfe7462e03de",
-#     "mnemonic": "all foster shift vintage scene inside snap pole since enlist eternal pet know dutch uncle poem speed under garment save inner blade author snack",
-#     "language": "english",
-#     "passphrase": "ZtTcJPaq1cPUqYQ",
-#     "seed": "dc0ea0203a5552d496ee6eb0ce59d1dca0d83718c0cbcf2f07b9f8cb4d964c91d6215b981098666e25ece3aea1c08ef787d02b2d4b75bf9f865281e29c7deab5",
-#     "root_xprivate_key": "vprv9DMUxX4ShgxMMG8T9qymUkMYEgPiPEgMh7gxs1aSaEmbXYjnPS8eR89h5Dn7DSVs6WhYEK8384RRiWexjURxswaoQR8N7zpFaHn2g5eKina",
-#     "root_xpublic_key": "vpub5SLqN2bLY4WeZkCvFsWmqtJGniECnhQD4LcZfPz48aJaQM4vvyStxvUAvVV6Td5YyMWNNxQY5Nbscby3JLhmwbSTFK4oKGrEeV44JKdWpxC",
-#     "xprivate_key": "vprv9TwUUZNyTZfHczkGGRqmFuMbn5wmPnT29PVkfFvJ5X27DWTZZtLH51eKRCbJoEm8Wxgvm2m6pvKZuYF3MVXkTRFJJZaBQNizMoXv23ftXAm",
-#     "xpublic_key": "vpub5gvpt4usHwDaqUpjNTNmd3JLL7nFoFAsWcRMTeKudrZ66Jni7ReXcoxoGVA3LCiAmwqoZxXV6DgcB2e1i5AX5MdgSbydPS2b5yzhb2FugdD",
-#     "uncompressed": "54ccee9ff2b648bf6d74bf3a80e113346ed100f4c77895bee56c6fc0c0c8e1dec8136f764b6a260116efb9a19600da791147b9b353774374745686d94c8bc4dd",
-#     "compressed": "0354ccee9ff2b648bf6d74bf3a80e113346ed100f4c77895bee56c6fc0c0c8e1de",
-#     "chain_code": "1fb066136ee75ee13116ded0f2ba8f8c8b23f71f5ab8ad54b7753ed733004727",
-#     "private_key": "8aca325c3913e5947f88b7177ee20c4806e2edd591dcfb42651bf5857295b827",
-#     "public_key": "0354ccee9ff2b648bf6d74bf3a80e113346ed100f4c77895bee56c6fc0c0c8e1de",
-#     "wif": "cSEVRm4aH2rQuGAGte3ZL9JmfdKkR1gwChxBebrk5xHQYjNAGVoY",
-#     "finger_print": "cc482014",
-#     "semantic": "p2wpkh",
-#     "path": "m/0/0/0'/0'/0'/0/0",
-#     "hash": "cc482014bac0e6697013861af0569f594d9df0df",
-#     "addresses": {
-#         "p2pkh": "mz96YYQQpdg13v8Tcg2XfhtYKzsdRJ6ANA",
-#         "p2sh": "2MtcnHsjLWXHhiaatrUksXzD4jTgRicf1j2",
-#         "p2wpkh": "tb1qe3yzq996crnxjuqnscd0q45lt9xemuxlc6uhmh",
-#         "p2wpkh_in_p2sh": "2N1DgK4pCsidm9xCXMMNcUpuMJZAX5jG7Ji",
-#         "p2wsh": "tb1qn07r9jxwhapufy0z886a2zlajpgp79ttaturduy6mlt4gxfpr48qeycfjj",
-#         "p2wsh_in_p2sh": "2N5ERfKm6KcYmwpUWCr7WjCmVKwNEEDfTxP"
-#     }
-# }
