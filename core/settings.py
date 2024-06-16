@@ -165,6 +165,7 @@ else:
     }
     AWS_DEFAULT_ACL = 'public-read'
     AWS_LOCATION = 'static'
+    AWS_MEDIA_LOCATION = 'media'
     # termina
     STORAGES = {
         'default': {'BACKEND': 'custom_storages.CustomS3Boto3Storage'},
