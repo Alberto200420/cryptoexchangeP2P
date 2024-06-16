@@ -7,7 +7,8 @@ from bitcoinutils.transactions import Transaction , TxInput , TxOutput, TxWitnes
 from bitcoinutils.keys import P2pkhAddress, P2wpkhAddress, PrivateKey
 from bitcoinutils.script import Script
 from bitcoinutils.utils import to_satoshis
-from hdwallet.symbols import BTCTEST as SYMBOL #  BTC as SYMBOL
+from bitcoinutils.setup import setup
+from hdwallet.symbols import BTC as SYMBOL #  BTCTEST as SYMBOL
 from hdwallet import BIP141HDWallet
 from .models import Wallet, UTXO
 from .serializers import *
@@ -15,6 +16,7 @@ import requests
 import os
 import logging
 logger = logging.getLogger(__name__)
+setup('mainnet')
 
 # ----------------------------------------- GET -------------------------------------------------
 class GetWallet(APIView):
