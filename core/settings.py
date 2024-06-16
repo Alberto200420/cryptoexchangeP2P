@@ -1,9 +1,10 @@
 from pathlib import Path
 from os import getenv, path
-# import environ
-import os
-import dotenv
 from datetime import timedelta
+import sys
+import dj_database_url
+from django.core.management.utils import get_random_secret_key
+import dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,15 +14,17 @@ dotenv_file = BASE_DIR / '.env'
 if path.isfile(dotenv_file):
     dotenv.load_dotenv(dotenv_file)
 
+DEVELOPMENT_MODE = getenv('DEVELOPMENT_MODE', 'False') == 'True'
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = getenv("SECRET_KEY")
+SECRET_KEY = getenv('DJANGO_SECRET_KEY', get_random_secret_key())
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = "RENDER" not in os.environ
-DEBUG = True
+DEBUG = getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = getenv('DJANGO_ALLOWED_HOSTS','127.0.0.1,localhost').split(',')
 
@@ -92,12 +95,19 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEVELOPMENT_MODE is True:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+elif len(sys.argv) > 0 and sys.argv[1] != 'collectstatic':
+    if getenv('DATABASE_URL', None) is None:
+        raise Exception('DATABASE_URL environment variable not defined')
+    DATABASES = {
+        'default': dj_database_url.parse(getenv('DATABASE_URL')),
+    }
 
 
 # Password validation
@@ -135,8 +145,22 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
+if DEVELOPMENT_MODE is True:
+    STATIC_URL = 'static/'
+    STATIC_ROOT = BASE_DIR / 'static'
 
-STATIC_URL = 'static/'
+    # Media files (Uploaded by users)
+    MEDIA_URL = 'media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
+else:
+    AWS_S3_ACCESS_KEY_ID = getenv('AWS_S3_ACCESS_KEY_ID')
+    AWS_S3_SECRET_ACCESS_KEY = getenv('AWS_S3_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = getenv('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_REGION_NAME = getenv('AWS_S3_REGION_NAME')
+    STORAGES = {
+        'default': {'BACKEND': 'custom_storages.CustomS3Boto3Storage'},
+        'staticfiles': {'BACKEND': 'storages.backends.s3boto3.S3StaticStorage'}
+    }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -199,7 +223,7 @@ DJOSER = {
     "PASSWORD_RESET_CONFIRM_URL": "password-reset/{uid}/{token}",
     "PASSWORD_RESET_CONFIRM_RETYPE": True,
     "ACTIVATION_URL": "activation/{uid}/{token}",
-    'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': getenv('REDIRECT_URLS').split(','),
+    # 'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': getenv('REDIRECT_URLS').split(','),
     "TEMPLATES": {
         "activation": "email/activation.html",
         "confirmation": "email/confirmation.html",
@@ -210,7 +234,7 @@ DJOSER = {
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "DIRS": [BASE_DIR / 'templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -223,14 +247,14 @@ TEMPLATES = [
     },
 ]
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = getenv('GOOGLE_AUTH_KEY')
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = getenv('GOOGLE_AUTH_SECRET_KEY')
-SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
-    'https://www.googleapis.com/auth/userinfo.email',
-    'https://www.googleapis.com/auth/userinfo.profile',
-    'openid'
-]
-SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = ['first_name', 'last_name']
+# SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = getenv('GOOGLE_AUTH_KEY')
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = getenv('GOOGLE_AUTH_SECRET_KEY')
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+#     'https://www.googleapis.com/auth/userinfo.email',
+#     'https://www.googleapis.com/auth/userinfo.profile',
+#     'openid'
+# ]
+# SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = ['first_name', 'last_name']
 
 # SOCIAL_AUTH_FACEBOOK_KEY = getenv('FACEBOOK_AUTH_KEY')
 # SOCIAL_AUTH_FACEBOOK_SECRET = getenv('FACEBOOK_AUTH_SECRET_KEY')
@@ -260,9 +284,3 @@ GRAPH_MODELS = {
   'all_applications': True,
   'group_models': True,
 }
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
-# Media files (Uploaded by users)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
