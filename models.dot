@@ -1,7 +1,7 @@
 digraph model_graph {
   // Dotfile by Django-Extensions graph_models
-  // Created: 2024-06-01 07:04
-  
+  // Created: 2024-06-17 11:37
+  // Cli Options: -a
 
   fontname = "Roboto"
   fontsize = 8
@@ -325,24 +325,6 @@ digraph model_graph {
     color=olivedrab4
     style="rounded"
   
-    django_contrib_auth_models_PermissionsMixin [label=<
-      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
-      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
-      <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
-      PermissionsMixin
-      </B></FONT></TD></TR>
-    
-    
-      <TR><TD ALIGN="LEFT" BORDER="0">
-      <FONT FACE="Roboto">is_superuser</FONT>
-      </TD><TD ALIGN="LEFT">
-      <FONT FACE="Roboto">BooleanField</FONT>
-      </TD></TR>
-    
-    
-      </TABLE>
-      >]
-  
     django_contrib_auth_base_user_AbstractBaseUser [label=<
       <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
       <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
@@ -363,6 +345,24 @@ digraph model_graph {
       <FONT FACE="Roboto">password</FONT>
       </TD><TD ALIGN="LEFT">
       <FONT FACE="Roboto">CharField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    django_contrib_auth_models_PermissionsMixin [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+      PermissionsMixin
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Roboto">is_superuser</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Roboto">BooleanField</FONT>
       </TD></TR>
     
     
@@ -686,7 +686,7 @@ digraph model_graph {
       <TR><TD ALIGN="LEFT" BORDER="0">
       <FONT COLOR="#7B7B7B" FACE="Roboto"><B>buyer</B></FONT>
       </TD><TD ALIGN="LEFT">
-      <FONT COLOR="#7B7B7B" FACE="Roboto"><B>OneToOneField (id)</B></FONT>
+      <FONT COLOR="#7B7B7B" FACE="Roboto"><B>ForeignKey (id)</B></FONT>
       </TD></TR>
     
     
@@ -708,9 +708,9 @@ digraph model_graph {
     
     
       <TR><TD ALIGN="LEFT" BORDER="0">
-      <FONT COLOR="#7B7B7B" FACE="Roboto">address</FONT>
+      <FONT FACE="Roboto">address</FONT>
       </TD><TD ALIGN="LEFT">
-      <FONT COLOR="#7B7B7B" FACE="Roboto">CharField</FONT>
+      <FONT FACE="Roboto">CharField</FONT>
       </TD></TR>
     
     
@@ -726,7 +726,7 @@ digraph model_graph {
       <TR><TD ALIGN="LEFT" BORDER="0">
       <FONT COLOR="#7B7B7B" FACE="Roboto">bitcoin_value</FONT>
       </TD><TD ALIGN="LEFT">
-      <FONT COLOR="#7B7B7B" FACE="Roboto">IntegerField</FONT>
+      <FONT COLOR="#7B7B7B" FACE="Roboto">FloatField</FONT>
       </TD></TR>
     
     
@@ -1341,7 +1341,7 @@ digraph model_graph {
   [label=" user (created_by_user)"] [arrowhead=none, arrowtail=dot, dir=both];
 
   apps_sales_models_Sale -> apps_users_models_UserAccount
-  [label=" buyer (purchased_sale)"] [arrowhead=none, arrowtail=none, dir=both];
+  [label=" buyer (purchased_sales)"] [arrowhead=none, arrowtail=dot, dir=both];
 
   apps_sales_models_Comments -> apps_sales_models_Sale
   [label=" sale_post (comments)"] [arrowhead=none, arrowtail=none, dir=both];
