@@ -152,6 +152,16 @@ if DEVELOPMENT_MODE is True:
     # Media files (Uploaded by users)
     MEDIA_URL = 'media/'
     MEDIA_ROOT = BASE_DIR / 'media'
+    # Configuración de usuario personalizado y correo electrónico AWS SES
+    EMAIL_BACKEND = 'django_ses.SESBackend'
+    AWS_SES_ACCESS_KEY_ID = getenv("AWS_SES_ACCESS_KEY_ID")
+    AWS_SES_SECRET_ACCESS_KEY = getenv("AWS_SES_SECRET_ACCESS_KEY")
+    AWS_SES_REGION_NAME = getenv("AWS_SES_REGION_NAME")
+    AWS_SES_REGION_ENDPOINT = f'email.{AWS_SES_REGION_NAME}.amazonaws.com'
+    USE_SES_V2 = True
+    AWS_SES_FROM_EMAIL = getenv("AWS_SES_FROM_EMAIL")
+    DEFAULT_FROM_EMAIL = getenv("AWS_SES_FROM_EMAIL")
+    SITE_NAME = "Crypto Exchage p2p"
 else:
     AWS_S3_ACCESS_KEY_ID = getenv('AWS_S3_ACCESS_KEY_ID')
     AWS_S3_SECRET_ACCESS_KEY = getenv('AWS_S3_SECRET_ACCESS_KEY')
@@ -277,18 +287,15 @@ TEMPLATES = [
                  # NAME-app.ClassModel
 AUTH_USER_MODEL = "users.UserAccount"
 
-# Configuración de usuario personalizado y correo electrónico AWS
-#   EMAIL
-EMAIL_BACKEND = 'django_ses.SESBackend'
-AWS_SES_ACCESS_KEY_ID = getenv("AWS_SES_ACCESS_KEY_ID")
-AWS_SES_SECRET_ACCESS_KEY = getenv("AWS_SES_SECRET_ACCESS_KEY")
-AWS_SES_REGION_NAME = getenv("AWS_SES_REGION_NAME")
-AWS_SES_REGION_ENDPOINT = f'email.{AWS_SES_REGION_NAME}.amazonaws.com'
-USE_SES_V2 = True
-AWS_SES_FROM_EMAIL = getenv("AWS_SES_FROM_EMAIL")
-DEFAULT_FROM_EMAIL = getenv("AWS_SES_FROM_EMAIL")
 DOMAIN = getenv("DOMAIN")
-SITE_NAME = "Crypto Exchage p2p"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+DEFAULT_FROM_EMAIL = getenv("DEFAULT_FROM_EMAIL")
+EMAIL_HOST = getenv('EMAIL_HOST')
+EMAIL_HOST_USER = getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = getenv('EMAIL_PORT')
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
 
 GRAPH_MODELS = {
   'all_applications': True,
