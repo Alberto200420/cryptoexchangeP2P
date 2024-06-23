@@ -17,7 +17,7 @@ from apps.wallet.models import Wallet, UTXO
 import os
 import time
 import requests
-FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
+# FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
 DOMAIN = settings.DOMAIN
 ADMIN = os.getenv('ADMIN')
 import logging
@@ -183,7 +183,7 @@ class Buy(APIView):
     send_mail(
       subject='SOMEONE HAS ACCEPTED YOUR OFFER',
       message=f'Hi {recipient_email}, !CONGRATULATIONS!, someone has accepted your sale, visit this url {DOMAIN}/trade/{slug}/confirm to communicate with the user and close the sale.',
-      from_email=FROM_EMAIL,
+      # from_email=FROM_EMAIL,
       recipient_list=[recipient_email],
       html_message=html_content
     )
@@ -359,7 +359,7 @@ class ActiveSaleLoop(APIView):
     send_mail(
       subject='TRANSACTION RECEIVED',
       message=f'Hi {recipient_email}, this message is only to notify you that your transaction to the address {address} was received successfully. Share your post with this link {DOMAIN}/trade/{slug}/buy" or view your post at this link {DOMAIN}/dashboard/posts".',
-      from_email=FROM_EMAIL,
+      # from_email=FROM_EMAIL,
       recipient_list=[recipient_email],
       html_message=html_content
     )
@@ -434,7 +434,7 @@ class ConfirmBuy(APIView):
     send_mail(
       subject='Purchase completed',
       message=f'Hi {recipient_email}, Your purchase has been completed, you can now see your balance reflected in your account, remember to send your cryptocurrencies as soon as possible to a wallet that belongs to you. Thanks for choosing us Crypto exchange team',
-      from_email=FROM_EMAIL,
+      # from_email=FROM_EMAIL,
       recipient_list=[recipient_email],
       html_message=html_content
     )
@@ -552,7 +552,7 @@ class ReportPost(APIView):
     send_mail(
       subject='REPORT',
       message=f'This user { reportingUser }, reported this user { userReported }, slug post { url } Rerporting message: { reportingMessage }',
-      from_email=FROM_EMAIL,
+      # from_email=FROM_EMAIL,
       recipient_list=[ADMIN],
       html_message=html_content
     )
@@ -574,7 +574,7 @@ class ReportPost(APIView):
       message=f"""Hello, { reportingUser } we are very sorry that you had a bad experience with one of our users,
       we will review your case as soon as possible and you will be notified about the status of this operation { url }, 
       do not panic, we have everything under control and we will solve it in less than 24 hours. cryptoexchange team.""",
-      from_email=FROM_EMAIL,
+      # from_email=FROM_EMAIL,
       recipient_list=[reportingUser],
       html_message=html_content
     )
