@@ -93,7 +93,9 @@ class CreateSalePostView(APIView):
         address = self.create_sale_and_address(serializer, request)
         return Response({'address': address}, status=status.HTTP_201_CREATED)
       except Exception as e:
+        logger.error(f"Error on create_sale_and_address : {e}")
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    logger.error(f"Serializer errors: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class MakeComment(APIView):
