@@ -27,7 +27,7 @@ class Sale(models.Model):
   bankEntity =    models.CharField(max_length=50)
   status =        models.CharField(max_length=11, choices=STATUS, default='pending')
   created_at =    models.DateTimeField(auto_now_add=True)
-  accountNumber = models.PositiveIntegerField()
+  accountNumber = models.PositiveBigIntegerField() # Values from 0 to 9-223-372-036-854-775-807 are safe in all databases supported by Django
   buyer =         models.ForeignKey(User, 
                                     on_delete=models.SET_NULL, 
                                     null=True, blank=True,
