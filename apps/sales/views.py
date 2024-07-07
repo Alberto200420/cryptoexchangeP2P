@@ -8,8 +8,8 @@ from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
 from hdwallet import BIP141HDWallet
-from hdwallet.symbols import BTC as SYMBOL # BTCTEST as SYMBOL
-# from hdwallet.symbols import BTCTEST as SYMBOL # BTCTEST as SYMBOL
+from hdwallet.symbols import BTC as SYMBOL
+# from hdwallet.symbols import BTCTEST as SYMBOL
 from .models import Sale
 from .serializers import *
 from apps.user_profile.models import Profile

@@ -113,6 +113,11 @@ class Withdraw(APIView):
       # recommended_fees = requests.get(url="https://mempool.space/testnet/api/v1/fees/recommended")
       fee_data = recommended_fees.json()
       # Calculamos el tamaño de la transacción según el número de inputs y outputs
+      # Tamaño de la salida:
+      #   Para P2PKH (dirección legacy): 34 vBytes
+      #   Para P2SH (dirección SegWit compatible): 32 vBytes
+      #   Para P2WPKH (dirección Native SegWit): 31 vBytes
+      #   Para P2TR (dirección Taproot): 43 vBytes
       transaction_size = (num_inputs * 68) + (1 * 31) + 10
       les_fee_sat = transaction_size * fee_data["fastestFee"]
       amount_less_fee = amount_sat - les_fee_sat
