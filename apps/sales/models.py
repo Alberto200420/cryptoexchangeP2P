@@ -27,12 +27,12 @@ class Sale(models.Model):
   bankEntity =    models.CharField(max_length=50)
   status =        models.CharField(max_length=11, choices=STATUS, default='pending')
   created_at =    models.DateTimeField(auto_now_add=True)
-  accountNumber = models.PositiveBigIntegerField() # Values from 0 to 9-223-372-036-854-775-807 are safe in all databases supported by Django
+  accountNumber = models.CharField(max_length=20)
   buyer =         models.ForeignKey(User, 
                                     on_delete=models.SET_NULL, 
                                     null=True, blank=True,
                                     related_name='purchased_sales')
-  reference =     models.CharField(max_length=100, blank=True, null=True)
+  reference =     models.CharField(max_length=80, blank=True, null=True)
   address =       models.CharField(max_length=100, unique=True)
   buyed_at =      models.DateTimeField(blank=True, null=True)
   bitcoin_value = models.FloatField(blank=True, null=True)
