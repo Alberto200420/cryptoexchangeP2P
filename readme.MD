@@ -4,10 +4,21 @@
 
 ## This project is a backend built with Django for a web platform where users can register, log in, create posts, obtain a Bitcoin wallet to deposit into, receive purchase offers from other users, accept offers by receiving a screenshot of the bank transfer, and withdraw Bitcoin from the wallet that a user has purchased. This backend uses the [python-bitcoin-utils](https://github.com/karask/python-bitcoin-utils) library to create transactions and the [python-hdwallet](https://github.com/meherett/python-hdwallet) library to create Bitcoin wallets.
 
+## Frontend code https://github.com/Alberto200420/cryptoexchangeP2P-frontend
+
 ### The code emphasizes functions derived from bitcoin-utils and hdwallet.
 ## Features
 
-### Creation of Bitcoin Address P2WPKH with [hdwallet](https://github.com/meherett/python-hdwallet) Library
+### 1 - User authentication with JWT
+The server allowed obtaining the name, surname, email and password to obtain that data and send an account activation code to the email provided by the user. When activating their account, the server changed the user's status from inactive to active.
+
+### 2 - Automated email sending
+The [sendgrid](https://sendgrid.com/en-us) server could send authentication codes to the email of the user who registered and email notifications to users about the status of exchange operations with other users (Bitcoin received, Post created, Offer taken, Offer accepted, Report of users making malignant operations).
+
+### 3 - Creation of exchange operations
+The server obtains the user's data (account number, bank name and referral (optional)) and returns the address to which the user should send the Bitcoins for their post to be activated.
+
+### 3 - Creation of Bitcoin Address P2WPKH with [hdwallet](https://github.com/meherett/python-hdwallet) Library
 ```python
 class CreateSalePostView(APIView):
     """
@@ -81,7 +92,8 @@ class CreateSalePostView(APIView):
                 return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 ```
-### Withdraw bitcoin using [bitcoin-utils](https://github.com/karask/python-bitcoin-utils) library
+
+### 4 - Withdraw bitcoin using [bitcoin-utils](https://github.com/karask/python-bitcoin-utils) library
 
 ```python
 class Withdraw(APIView):
